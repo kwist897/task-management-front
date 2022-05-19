@@ -1,5 +1,10 @@
 <template>
 <v-container fluid>
+  <v-row>
+    <v-col>
+
+    </v-col>
+  </v-row>
  <v-row>
    <v-col cols="6">
      <div class="d-flex flex-column">

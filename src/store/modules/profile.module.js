@@ -1,35 +1,38 @@
 import ApiService from "@/api/api.service";
-import JwtService from "@/api/jwt.service";
 
 const state = {
   errors: null,
-  groups: [],
+  profile: {},
 };
 
 const getters = {
-  userGroups(state) {
+  currentUser(state) {
     return state.user;
+  },
+  isAuthenticated(state) {
+    return state.isAuthenticated;
   },
 };
 
 const actions = {
-  getGroups(context, profileId) {
+  createProfile(context, profile) {
     return new Promise((resolve) => {
-      ApiService.get(`/profile/${profileId}/group`)
+      ApiService.post("/user/profile", { profile })
         .then(({ response }) => {
-          context.commit("setAuth", response.data.data);
-          resolve(data);
+          context.commit("setProfile", response.data.data);
+          resolve(response);
         })
         .catch(({ response }) => {
           context.commit("setError", response.data.error.text);
         });
     });
   },
-  createGroup(context, group) {
+  getCurrent(context) {
     return new Promise((resolve) => {
-      ApiService.post("/user/group", { group })
+      ApiService.get("/user/profile")
         .then(({ response }) => {
-          context.commit("setGroups", response.data.data);
+          console.log(response.data.data);
+          context.commit("setProfile", response.data.data);
           resolve(response);
         })
         .catch(({ response }) => {
@@ -40,11 +43,11 @@ const actions = {
 };
 
 const mutations = {
-  setError(state, error) {
-    state.errors = error;
+  setError(state, errors) {
+    state.errors = errors;
   },
-  setGroups(state, group) {
-    state.groups = group;
+  setProfile(state, profile) {
+    state.profile = profile;
     state.errors = {};
   },
 };

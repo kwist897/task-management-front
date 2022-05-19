@@ -4,24 +4,24 @@ import JwtService from "@/api/jwt.service";
 const state = {
   errors: null,
   user: {
-    id: "",
-    username: "",
-    email: "",
-    accountType: "",
+    id: Number,
+    username: String,
+    email: String,
+    accountType: String,
     tokens: {
       accessToken: {
-        accessToken: "",
-        expirationDate: "",
+        accessToken: String,
+        expirationDate: String,
       },
       refreshToken: {
-        refreshToken: "",
-        expirationDate: "",
+        refreshToken: String,
+        expirationDate: String,
       },
     },
     profile: {
-      id: "",
-      firstName: "",
-      lastName: "",
+      id: Number,
+      firstName: String,
+      lastName: String,
     },
   },
   isAuthenticated: !!JwtService.getToken(),
@@ -39,11 +39,10 @@ const getters = {
 const actions = {
   login(context, credentials) {
     return new Promise((resolve) => {
-      ApiService.post("/user/authenticate", { ...credentials })
-        .then(({ data }) => {
-          console.log(data.data);
-          context.commit("setAuth", data.data);
-          resolve(data);
+      ApiService.post("/auth/user/authenticate", { credentials })
+        .then(({ response }) => {
+          context.commit("setAuth", response.data.data);
+          resolve(response);
         })
         .catch(({ response }) => {
           context.commit("setError", response.data.error.text);
@@ -55,10 +54,10 @@ const actions = {
   },
   register(context, credentials) {
     return new Promise((resolve, reject) => {
-      ApiService.post("users", { ...credentials })
-        .then(({ data }) => {
-          context.commit("setAuth", data.data);
-          resolve(data);
+      ApiService.post("/auth/user/registration", { ...credentials })
+        .then(({ response }) => {
+          context.commit("setAuth", response.data.data);
+          resolve(response);
         })
         .catch(({ response }) => {
           context.commit("setError", response.data.errors);
@@ -67,18 +66,22 @@ const actions = {
     });
   },
   checkAuth(context) {
-    if (JwtService.getToken()) {
-      ApiService.setHeader();
-      ApiService.get("user")
-        .then(({ data }) => {
-          context.commit("setAuth", data.user);
-        })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.errors);
-        });
-    } else {
-      context.commit("logOut");
-    }
+    return new Promise((resolve, reject) => {
+      if (JwtService.getToken()) {
+        ApiService.setHeader();
+        ApiService.get("/auth/user/current")
+          .then(({ response }) => {
+            context.commit("setAuth", response.data.data);
+            resolve(response);
+          })
+          .catch(({ response }) => {
+            context.commit("setError", response.data.errors);
+            reject(response);
+          });
+      } else {
+        context.commit("logOut");
+      }
+    });
   },
 };
 

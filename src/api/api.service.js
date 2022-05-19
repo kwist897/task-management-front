@@ -7,8 +7,8 @@ const ApiService = {
     Vue.use(axios);
     axios.defaults.baseURL =
       process.env.NODE_ENV === "docker"
-        ? "http://gateway:8092/auth"
-        : "http://localhost:8092/auth";
+        ? "http://gateway:8092"
+        : "http://localhost:8092";
   },
 
   setHeader() {
