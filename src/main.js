@@ -11,8 +11,24 @@ Vue.prototype.$http = axios;
 
 Vue.config.productionTip = false;
 
-// router.beforeEach((to, from, next) =>
-//     Promise.all([store.dispatch("checkAuth")]).then(next));
+router.beforeEach((to, from, next) =>
+  Promise.all([
+    store
+      .dispatch("checkAuth")
+      .then((result) => {
+        if (result === true) {
+          store.dispatch("getCurrentProfile").then((res) => {
+            if (res.result === "OK") {
+              store.dispatch("getUserWorkspaces");
+            }
+          });
+        }
+      })
+      .catch((result) => {
+        console.log(result);
+      }),
+  ]).then(next)
+);
 
 ApiService.init();
 

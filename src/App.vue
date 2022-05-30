@@ -1,8 +1,10 @@
 <template>
   <v-app>
-    <Header/>
+    <Header />
     <v-main>
-      <router-view/>
+      <v-container fluid class="fill-height">
+        <router-view :key="$route.id"></router-view>
+      </v-container>
     </v-main>
   </v-app>
 </template>
@@ -13,12 +15,7 @@ import Header from "@/components/Header";
 export default {
   name: "App",
   components: {
-    Header
-  },
-  data(){
-
-  },
-  computed: {
+    Header,
   },
 };
 </script>

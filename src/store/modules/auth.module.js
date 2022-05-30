@@ -3,27 +3,7 @@ import JwtService from "@/api/jwt.service";
 
 const state = {
   errors: null,
-  user: {
-    id: Number,
-    username: String,
-    email: String,
-    accountType: String,
-    tokens: {
-      accessToken: {
-        accessToken: String,
-        expirationDate: String,
-      },
-      refreshToken: {
-        refreshToken: String,
-        expirationDate: String,
-      },
-    },
-    profile: {
-      id: Number,
-      firstName: String,
-      lastName: String,
-    },
-  },
+  user: {},
   isAuthenticated: !!JwtService.getToken(),
 };
 
@@ -39,13 +19,14 @@ const getters = {
 const actions = {
   login(context, credentials) {
     return new Promise((resolve) => {
-      ApiService.post("/auth/user/authenticate", { credentials })
-        .then(({ response }) => {
-          context.commit("setAuth", response.data.data);
-          resolve(response);
+      ApiService.post("/auth/user/authenticate", { ...credentials })
+        .then(({ data }) => {
+          context.commit("setAuth", data.data);
+          context.commit("updateToken", data.data.tokens);
+          resolve(data);
         })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.error.text);
+        .catch((response) => {
+          context.commit("setError", response.error);
         });
     });
   },
@@ -55,31 +36,59 @@ const actions = {
   register(context, credentials) {
     return new Promise((resolve, reject) => {
       ApiService.post("/auth/user/registration", { ...credentials })
-        .then(({ response }) => {
-          context.commit("setAuth", response.data.data);
-          resolve(response);
+        .then(({ data }) => {
+          if (data.result === "OK") {
+            context.commit("setAuth", data.data);
+            context.commit("updateToken", data.data.tokens);
+          }
+          resolve(data.data);
         })
         .catch(({ response }) => {
-          context.commit("setError", response.data.errors);
-          reject(response);
+          context.commit("setError", response.error);
+          reject(response.error);
         });
     });
+  },
+  updateUser(context, user) {
+    context.commit("setUser", user);
   },
   checkAuth(context) {
     return new Promise((resolve, reject) => {
       if (JwtService.getToken()) {
-        ApiService.setHeader();
-        ApiService.get("/auth/user/current")
-          .then(({ response }) => {
-            context.commit("setAuth", response.data.data);
-            resolve(response);
-          })
-          .catch(({ response }) => {
-            context.commit("setError", response.data.errors);
-            reject(response);
-          });
+        if (Object.keys(context.rootState.profile.profile).length === 0) {
+          ApiService.setHeader();
+
+          ApiService.query("/auth/user/current")
+            .then(({ data }) => {
+              context.commit("setAuth", data.data);
+              return resolve(true);
+            })
+            .catch((response) => {
+              context.commit("setError", response.error);
+              return reject(response.error);
+            });
+        } else {
+          return resolve(false);
+        }
       } else {
         context.commit("logOut");
+        return reject(false);
+      }
+    });
+  },
+  exchangeTokens(context) {
+    return new Promise((resolve, reject) => {
+      if (JwtService.getRefreshToken()) {
+        ApiService.setRefreshHeader();
+        ApiService.query("/auth/token/refresh")
+          .then(({ data }) => {
+            context.commit("updateToken", data);
+            resolve(data);
+          })
+          .catch((response) => {
+            context.commit("setError", response);
+            reject(response);
+          });
       }
     });
   },
@@ -93,14 +102,22 @@ const mutations = {
     state.isAuthenticated = true;
     state.user = user;
     state.errors = {};
-
-    JwtService.saveToken(state.user.tokens.accessToken.accessToken);
+  },
+  setUser(state, user) {
+    state.user = user;
+  },
+  updateToken(state, response) {
+    JwtService.saveTokens(
+      response.accessToken.accessToken,
+      response.refreshToken.refreshToken
+    );
+    ApiService.setHeader();
   },
   logOut(state) {
     state.isAuthenticated = false;
     state.user = {};
     state.errors = {};
-    JwtService.destroyToken();
+    JwtService.destroyTokens();
   },
 };
 

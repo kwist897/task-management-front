@@ -1,11 +1,8 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Login from "@/views/Login";
-import Registration from "@/views/Registration";
 import Home from "@/views/Home";
-import Profile from "@/views/Profile";
-import Group from "@/views/Group";
 import Tasks from "@/views/Tasks";
+import Workspace from "@/views/Workspace";
 
 Vue.use(VueRouter);
 
@@ -18,27 +15,55 @@ const routes = [
   {
     path: "/login",
     name: "Login",
-    component: Login,
+    component: () => import("../views/Login.vue"),
   },
   {
     path: "/registration",
     name: "Registration",
-    component: Registration,
+    component: () => import("../views/Registration.vue"),
   },
   {
     path: "/profile",
     name: "Profile",
-    component: Profile,
+    component: () => import("../views/Profile.vue"),
+  },
+  {
+    path: "/profile/create",
+    name: "ProfileCreate",
+    component: () => import("../views/ProfileCreate.vue"),
   },
   {
     path: "/group",
     name: "Group",
-    component: Group,
+    component: () => import("../views/Group.vue"),
   },
   {
-    path: "/task",
+    path: "/group/create",
+    name: "GroupCreate",
+    component: () => import("../views/GroupCreate.vue"),
+  },
+  {
+    path: "/group/:id/details",
+    name: "GroupDetails",
+    component: () => import("../views/GroupDetails.vue"),
+    props: true,
+  },
+  {
+    path: "/workspace/:id",
+    name: "Workspace",
+    component: Workspace,
+    props: true,
+  },
+  {
+    path: "/project/:id/tasks",
     name: "Task",
     component: Tasks,
+    props: true,
+  },
+  {
+    path: "/",
+    name: "Home",
+    component: Home,
   },
   {
     path: "/about",
@@ -53,6 +78,7 @@ const routes = [
 
 const router = new VueRouter({
   routes,
+  mode: "history",
 });
 
 export default router;

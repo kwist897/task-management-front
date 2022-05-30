@@ -1,5 +1,5 @@
 import ApiService from "@/api/api.service";
-import JwtService from "@/api/jwt.service";
+import Vue from "vue";
 
 const state = {
   errors: null,
@@ -7,33 +7,63 @@ const state = {
 };
 
 const getters = {
-  userGroups(state) {
-    return state.user;
+  currentGroups(state) {
+    return state.groups;
   },
 };
 
 const actions = {
   getGroups(context, profileId) {
-    return new Promise((resolve) => {
-      ApiService.get(`/profile/${profileId}/group`)
-        .then(({ response }) => {
-          context.commit("setAuth", response.data.data);
+    return new Promise((resolve, reject) => {
+      ApiService.query(`/user/profile/${profileId}/group`)
+        .then(({ data }) => {
+          context.commit("setGroups", data.data);
           resolve(data);
         })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.error.text);
+        .catch((response) => {
+          context.commit("setError", response.error);
+          reject(response);
         });
     });
   },
   createGroup(context, group) {
-    return new Promise((resolve) => {
-      ApiService.post("/user/group", { group })
-        .then(({ response }) => {
-          context.commit("setGroups", response.data.data);
-          resolve(response);
+    return new Promise((resolve, reject) => {
+      ApiService.post("/user/group", { ...group })
+        .then(({ data }) => {
+          context.commit("setGroups", data.data);
+          resolve(data);
         })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.error.text);
+        .catch((response) => {
+          context.commit("setError", response.error);
+          reject(response);
+        });
+    });
+  },
+  addParticipant(context, payload) {
+    return new Promise((resolve, reject) => {
+      Vue.axios
+        .post(`/user/group/${payload.groupId}/profile/${payload.profileId}`)
+        .then(({ data }) => {
+          context.commit("setGroups", data.data);
+          resolve(data);
+        })
+        .catch((response) => {
+          context.commit("setError", response.error);
+          reject(response);
+        });
+    });
+  },
+  removeParticipant(context, payload) {
+    return new Promise((resolve, reject) => {
+      Vue.axios
+        .delete(`/user/group/${payload.groupId}/profile/${payload.profileId}`)
+        .then(({ data }) => {
+          context.commit("setGroups", data.data);
+          resolve(data);
+        })
+        .catch((response) => {
+          context.commit("setError", response.error);
+          reject(response);
         });
     });
   },
@@ -43,9 +73,12 @@ const mutations = {
   setError(state, error) {
     state.errors = error;
   },
-  setGroups(state, group) {
-    state.groups = group;
+  setGroups(state, groups) {
+    state.groups = groups;
     state.errors = {};
+  },
+  addGroups(state, group) {
+    state.groups.push(group);
   },
 };
 

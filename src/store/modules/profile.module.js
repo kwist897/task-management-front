@@ -6,37 +6,44 @@ const state = {
 };
 
 const getters = {
-  currentUser(state) {
-    return state.user;
-  },
-  isAuthenticated(state) {
-    return state.isAuthenticated;
+  currentProfile(state) {
+    return state.profile;
   },
 };
 
 const actions = {
   createProfile(context, profile) {
     return new Promise((resolve) => {
-      ApiService.post("/user/profile", { profile })
-        .then(({ response }) => {
-          context.commit("setProfile", response.data.data);
-          resolve(response);
-        })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.error.text);
-        });
+      ApiService.post("/user/profile", { ...profile }).then(({ data }) => {
+        if (data.data === "OK") {
+          context.commit("setProfile", data.data);
+        }
+        resolve(data);
+      });
     });
   },
-  getCurrent(context) {
+  getCurrentProfile(context) {
     return new Promise((resolve) => {
-      ApiService.get("/user/profile")
-        .then(({ response }) => {
-          console.log(response.data.data);
-          context.commit("setProfile", response.data.data);
-          resolve(response);
+      ApiService.setHeader();
+      ApiService.query("/user/profile").then(({ data }) => {
+        context.commit("setProfile", data.data);
+        resolve(data);
+      });
+    });
+  },
+  updateCurrentProfile(context, profile) {
+    return new Promise((resolve) => {
+      ApiService.put(`/user/profile/${context.state.profile.id}`, {
+        ...profile,
+      })
+        .then(({ data }) => {
+          if (data.result === "OK") {
+            context.commit("setProfile", data.data);
+          }
+          resolve(data);
         })
-        .catch(({ response }) => {
-          context.commit("setError", response.data.error.text);
+        .catch((response) => {
+          context.commit("setError", response.error);
         });
     });
   },

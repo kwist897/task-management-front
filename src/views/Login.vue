@@ -1,23 +1,31 @@
 <template>
-  <div class="d-flex flex-column align-center text-center ">
-    <h1 class="pa-12">Sign In</h1>
-    <form class="justify-center col-md-5 px-12">
-      <v-text-field
-        v-model="username"
-        label="username"
-        type="text"
-      ></v-text-field>
-      <v-text-field
-        v-model="password"
-        label="password"
-        type="password"
-      ></v-text-field>
+  <v-container
+    fluid
+    class="flex-column rounded-lg elevation-5 pa-8 ma-2 align-self-center justify-center"
+  >
+    <div class="d-flex flex-column text-center align-center py-16">
+      <h1 class="text-h3 mb-8">Sign In</h1>
+      <form class="col-5 text-body-1 mt-8">
+        <v-text-field
+          v-model="username"
+          label="username"
+          type="text"
+        ></v-text-field>
+        <v-text-field
+          v-model="password"
+          label="password"
+          type="password"
+        ></v-text-field>
 
-      <v-btn class="align-center" @click="handleLogin(username, password)" color="primary"
-        >Send
-      </v-btn>
-    </form>
-  </div>
+        <v-btn
+          class="align-center my-8"
+          @click="handleLogin(username, password)"
+          color="primary"
+          >Send
+        </v-btn>
+      </form>
+    </div>
+  </v-container>
 </template>
 
 <script>
@@ -27,15 +35,17 @@ export default {
     return {
       username: "",
       password: "",
-      email: "",
-      accountType: "PERSONAL",
     };
   },
   methods: {
     handleLogin(username, password) {
-      this.$store
-        .dispatch("login", { username, password})
-        .then(() => this.$router.push({ name: "home" }));
+      this.$store.dispatch("login", { username, password }).then(() => {
+        this.$store.dispatch("getCurrentProfile").then(() => {
+          this.$store
+            .dispatch("getUserWorkspaces")
+            .then(() => this.$router.push({ name: "/" }));
+        });
+      });
     },
   },
 };
